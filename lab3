@@ -1,0 +1,261 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <iomanip>
+#include <sstream>
+#include <limits>
+
+using namespace std;
+
+// Класс Name: описывает имя с фамилией, именем и отчеством
+class Name {
+    string lastName;
+    string firstName;
+    string middleName;
+
+public:
+    // Конструктор с параметрами
+    Name(const string& ln = "", const string& fn = "", const string& mn = "") 
+        : lastName(ln), firstName(fn), middleName(mn) {}
+
+    // Функция приведения к строке
+    string toString() const {
+        string fullName;
+        if (!lastName.empty()) fullName += lastName;
+        if (!firstName.empty()) fullName += (fullName.empty() ? "" : " ") + firstName;
+        if (!middleName.empty()) fullName += (fullName.empty() ? "" : " ") + middleName;
+        return fullName;
+    }
+
+    void print() const {
+        cout << toString() << endl;
+    }
+};
+
+// Ввод имени с клавиатуры
+Name inputName() {
+    string lastName, firstName, middleName;
+    cout << "Введите фамилию (или нажмите Enter, чтобы пропустить): ";
+    getline(cin, lastName);
+    cout << "Введите имя (или нажмите Enter, чтобы пропустить): ";
+    getline(cin, firstName);
+    cout << "Введите отчество (или нажмите Enter, чтобы пропустить): ";
+    getline(cin, middleName);
+    return Name(lastName, firstName, middleName);
+}
+
+// Класс Time: описывает время в секундах с начала суток
+class Time {
+    int totalSeconds;
+
+public:
+    Time(int seconds = 0) : totalSeconds(seconds % 86400) {}
+
+    Time(int hours, int minutes, int seconds)
+        : totalSeconds((hours * 3600 + minutes * 60 + seconds) % 86400) {}
+
+    string toString() const {
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int seconds = totalSeconds % 60;
+
+        ostringstream oss;
+        oss << setw(2) << setfill('0') << hours << ":"
+            << setw(2) << setfill('0') << minutes << ":"
+            << setw(2) << setfill('0') << seconds;
+        return oss.str();
+    }
+
+    int getHour() const { return totalSeconds / 3600; }
+    int getMinute() const { return (totalSeconds % 3600) / 60; }
+    int getSecond() const { return totalSeconds % 60; }
+
+    void print() const {
+        cout << toString() << endl;
+    }
+};
+
+// Ввод времени в секундах с клавиатуры
+Time inputTimeInSeconds() {
+    int seconds;
+    cout << "Введите время в секундах: ";
+    while (!(cin >> seconds)) {
+        cout << "Ошибка ввода! Введите целое число секунд: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем оставшийся ввод
+    return Time(seconds);
+}
+
+// Ввод времени как часов, минут и секунд с клавиатуры
+Time inputTimeAsHMS() {
+    int hours, minutes, seconds;
+    cout << "Введите часы: ";
+    while (!(cin >> hours)) {
+        cout << "Ошибка ввода! Введите целое число часов: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+    cout << "Введите минуты: ";
+    while (!(cin >> minutes)) {
+        cout << "Ошибка ввода! Введите целое число минут: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+    cout << "Введите секунды: ";
+    while (!(cin >> seconds)) {
+        cout << "Ошибка ввода! Введите целое число секунд: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Очищаем оставшийся ввод
+    return Time(hours, minutes, seconds);
+}
+
+// Класс Department: описывает отдел
+class Department {
+    string name;
+    vector<class Employee*> employees;
+    class Employee* head;
+
+public:
+    Department(const string& deptName) : name(deptName), head(nullptr) {}
+
+    void setHead(Employee* employee) { head = employee; }
+    void addEmployee(Employee* employee) { employees.push_back(employee); }
+    string getName() const { return name; }
+    Employee* getHead() const { return head; }
+    vector<Employee*> getEmployees() const { return employees; }
+};
+
+// Класс Employee: описывает сотрудника
+class Employee {
+    Name name;
+    Department* department;
+
+public:
+    Employee(const Name& empName, Department* dept = nullptr)
+        : name(empName), department(dept) {
+        if (department) department->addEmployee(this);
+    }
+
+    void setDepartment(Department* dept) {
+        department = dept;
+        if (department) department->addEmployee(this);
+    }
+
+    string toString() const {
+        if (department) {
+            if (department->getHead() == this)
+                return name.toString() + " начальник отдела " + department->getName();
+            else
+                return name.toString() + " работает в отделе " + department->getName() + 
+                       ", начальник которого " + department->getHead()->name.toString();
+        }
+        return name.toString() + " не имеет отдела";
+    }
+
+    vector<Employee*> getDepartmentEmployees() const {
+        if (department)
+            return department->getEmployees();
+        return {};
+    }
+
+    void print() const {
+        cout << toString() << endl;
+    }
+};
+
+// Выбор задания и выполнение соответствующей функции
+void runTasks() {
+    int choice;
+    do {
+        cout << "\nВыберите задание:\n"
+             << "1 - Имя\n"
+             << "2 - Время (секунды)\n"
+             << "3 - Сотрудники и отделы\n"
+             << "4 - Список сотрудников отдела\n"
+             << "5 - Время (часы, минуты, секунды)\n"
+             << "6 - Текущее время (часы, минуты, секунды)\n"
+             << "0 - Выход\n"
+             << "Введите номер задания: ";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Очищаем ввод
+
+        switch (choice) {
+            case 1: { // Задание 1: Работа с именами
+                cout << "\n--- Задание 1: Ввод имен ---\n";
+                Name kleopatra = inputName();
+                Name pushkin = inputName();
+                Name mayakovsky = inputName();
+
+                kleopatra.print();
+                pushkin.print();
+                mayakovsky.print();
+                break;
+            }
+            case 2: { // Задание 2: Время в секундах
+                cout << "\n--- Задание 2: Ввод времени в секундах ---\n";
+                Time t1 = inputTimeInSeconds();
+                t1.print();
+                break;
+            }
+            case 3: { // Задание 3: Сотрудники и отделы
+                cout << "\n--- Задание 3: Сотрудники и отделы ---\n";
+                Department itDept("IT");
+                Employee petrov(inputName(), &itDept);
+                Employee kozlov(inputName(), &itDept);
+                Employee sidorov(inputName(), &itDept);
+
+                itDept.setHead(&kozlov);
+                petrov.print();
+                kozlov.print();
+                sidorov.print();
+                break;
+            }
+            case 4: { // Задание 4: Список сотрудников отдела
+                cout << "\n--- Задание 4: Список сотрудников отдела ---\n";
+                Department itDept("IT");
+                Employee petrov(inputName(), &itDept);
+                Employee kozlov(inputName(), &itDept);
+                Employee sidorov(inputName(), &itDept);
+
+                itDept.setHead(&kozlov);
+
+                cout << "\nСписок сотрудников отдела " << itDept.getName() << ":\n";
+                for (auto emp : kozlov.getDepartmentEmployees()) {
+                    emp->print();
+                }
+                break;
+            }
+            case 5: { // Задание 5: Время в формате ЧЧ:ММ:СС
+                cout << "\n--- Задание 5: Ввод времени в формате ЧЧ:ММ:СС ---\n";
+                Time t = inputTimeAsHMS();
+                t.print();
+                break;
+            }
+            case 6: { // Задание 6: Текущее время (часы, минуты, секунды)
+                cout << "\n--- Задание 6: Текущее время (часы, минуты, секунды) ---\n";
+                Time t = inputTimeInSeconds();
+
+                cout << "Часы: " << t.getHour() << endl;
+                cout << "Минуты: " << t.getMinute() << endl;
+                cout << "Секунды: " << t.getSecond() << endl;
+                break;
+            }
+            case 0: { // Выход из программы
+                cout << "Выход из программы.\n";
+                break;
+            }
+            default:
+                cout << "Неверный выбор. Пожалуйста, выберите правильный номер задания.\n";
+                break;
+        }
+    } while (choice != 0);
+}
+
+int main() {
+    runTasks();
+    return 0;
+}
